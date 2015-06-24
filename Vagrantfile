@@ -79,13 +79,6 @@ Vagrant.configure("2") do |config|
         serialFile = File.join(logdir, "%s-serial.txt" % vm_name)
         FileUtils.touch(serialFile)
 
-        config.vm.provider :vmware_fusion do |v, override|
-          v.vmx["serial0.present"] = "TRUE"
-          v.vmx["serial0.fileType"] = "file"
-          v.vmx["serial0.fileName"] = serialFile
-          v.vmx["serial0.tryNoRxLoss"] = "FALSE"
-        end
-
         config.vm.provider :virtualbox do |vb, override|
           vb.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
           vb.customize ["modifyvm", :id, "--uartmode1", serialFile]
@@ -97,8 +90,6 @@ Vagrant.configure("2") do |config|
         config.vm.network "forwarded_port", guest: 4001, host: ($expose_etcd_tcp + i - 1), auto_correct: true
       end
 
-      config.vm.provider :vmware_fusion do |vb|
-        vb.gui = $vb_gui
       $forwarded_ports.each do |guest, host|
         config.vm.network "forwarded_port", guest: guest, host: host, auto_correct: true
       end
