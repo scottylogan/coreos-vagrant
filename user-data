@@ -21,6 +21,16 @@ coreos:
   flannel:
     interface: $public_ipv4
   units:
+    - name: settimezone.service
+      command: start
+      content: |
+        [Unit]
+        Description=Set the time zone
+
+        [Service]
+        ExecStart=/usr/bin/timedatectl set-timezone America/Los_Angeles
+        RemainAfterExit=yes
+        Type=oneshot
     - name: etcd.service
       command: start
     # To use etcd2, comment out the above service and uncomment these
@@ -52,3 +62,27 @@ coreos:
 #        [Service]
 #        Type=oneshot
 #        ExecStart=/usr/bin/systemctl enable docker-tcp.socket
+write_files:
+  - path: /etc/ntp.conf
+    content: |
+      # from http://louissimoneau.com/2012/02/02/keeping-time-on-frequently-suspended-virtual-machines/
+      tinker panic 0
+      # Common pool
+      server 0.coreos.pool.ntp.org
+      server 1.coreos.pool.ntp.org
+      server 2.coreos.pool.ntp.org
+      server 3.coreos.pool.ntp.org
+      #
+      # Warning: Using default NTP settings will leave your NTP
+      # server accessible to all hosts on the Internet.
+      #
+      # If you want to deny all machines (including your own)
+      # from accessing the NTP server, uncomment:
+      #restrict default ignore
+      #
+      # Default configuration:
+      # - Allow only time queries, at a limited rate, sending KoD when in excess.
+      # - Allow all local queries (IPv4, IPv6)
+      restrict default nomodify nopeer noquery limited kod
+      restrict 127.0.0.1
+      restrict [::1]
